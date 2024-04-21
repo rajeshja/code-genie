@@ -6,172 +6,92 @@ class GenieProvider implements vscode.WebviewViewProvider {
 
 	private _view?: vscode.WebviewView;
 
-	constructor(private  readonly _extensionUri: vscode.Uri) {
+	constructor(private readonly _extensionUri: vscode.Uri) {
 		this._extensionUri = _extensionUri;
 	}
 
 	resolveWebviewView(
-		webviewView: vscode.WebviewView, 
-		context: vscode.WebviewViewResolveContext<unknown>, 
+		webviewView: vscode.WebviewView,
+		context: vscode.WebviewViewResolveContext<unknown>,
 		token: vscode.CancellationToken): void | Thenable<void> {
-			this._view = webviewView;
-
-			webviewView.webview.html = getWebviewContent();
+		this._view = webviewView;
+		webviewView.webview.options = {
+			// Allow scripts in the webview
+			enableScripts: true,
+			localResourceRoots: [vscode.Uri.joinPath(this._extensionUri, "media"), vscode.Uri.joinPath(this._extensionUri, "src", "ui")],
+		};
+		webviewView.webview.html = getWebviewContent(webviewView.webview, this._extensionUri);
 	}
 }
 
-function getWebviewContent(): string {
-    return `<!DOCTYPE html>
+function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
+
+	const imgPath = vscode.Uri.joinPath(extensionUri, "media", "kitt-black-slow.gif");
+	const imgSrcUri = webview.asWebviewUri(imgPath);
+	const cssPath = vscode.Uri.joinPath(extensionUri, "src", "ui", "style", "style.css");
+	const styleUri = webview.asWebviewUri(cssPath);
+
+	return `<!DOCTYPE html>
         <html lang="en">
 		<head>
+			<meta charset="UTF-8"/>
+			<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} ${imgSrcUri}; style-src ${webview.cspSource} ${styleUri}; script-src ${webview.cspSource}/scripts;"/>
 			<title>Chat Interface</title>
 			<script src="./scripts/htmx.min.js"></script>
-			<style>
-				body {
-					font-family: Arial, sans-serif;
-					display: flex;
-					justify-content: center;
-					align-items: center;
-					height: 100vh;
-					margin: 0;
-					padding: 0;
-					box-sizing: border-box;
-				}
-
-				.chat-container {
-					display: flex;
-					flex-grow: 1;
-					flex-direction: column;
-					width: 100%;
-					height: 99%;
-					max-width: 500px;
-					border: 1px solid #ccc;
-					padding: 10px;
-				}
-
-				.history {
-					flex-grow: 1;
-					overflow-y: auto;
-				}
-
-				.chat-message {
-					padding: 10px;
-					margin-bottom: 10px;
-					border-radius: 10px;
-				}
-
-				.chat-message .name {
-					font-style: italic;
-					font-weight: bold;
-					display: block;
-					padding: 5px 0;
-				}
-
-				.chat-message .message {
-					margin-left: 10px;
-				}
-
-				.self {
-					text-align: right;
-					border: solid 2px;
-					margin-left: 20px;
-				}
-
-				.bot {
-					border: solid 1px;
-					margin-right: 20px;
-				}
-
-				.input {
-					margin-top: auto;
-					padding: 5px 0;
-					display: flex;
-				}
-
-				.input textarea {
-					flex-grow: 1;
-				}
-
-				.input button {
-					width: 70px;
-				}
-			</style>
+			<link rel="stylesheet" type="text/css" href="${styleUri}"/>
 		</head>
 
 		<body>
 			<div class="chat-container" id="chatContainer">
 				<div class="history">
-					<div class="chat-message self">
-						<span class="name">You:</span>
-						<span class="message">Hello, how are you?</span>
+					<!--div class="welcome">
+						<img src="${imgSrcUri}" />
+					</div -->
+					<div class="chat-req-resp">
+						<div class="chat-message bot">
+							<span class="name">Genie:</span>
+							<span class="message">Welcome! How can I help you today?</span>
+						</div>
 					</div>
-					<div class="chat-message bot">
-						<span class="name">Genie:</span>
-						<span class="message">I'm good, thanks! How about you?</span>
+					<div class="chat-req-resp">
+						<div class="chat-message self">
+							<span class="name">You:</span>
+							<span class="message">Hello, how are you?</span>
+						</div>
+						<div class="chat-message bot">
+							<span class="name">Genie:</span>
+							<span class="message">I'm good, thanks! How about you?</span>
+						</div>
 					</div>
-					<div class="chat-message self">
-						<span class="name">You:</span>
-						<span class="message">Hello, how are you?</span>
+					<div class="chat-req-resp">
+						<div class="chat-message self">
+							<span class="name">You:</span>
+							<span class="message">Hello, how are you?</span>
+						</div>
+						<div class="chat-message bot">
+							<span class="name">Genie:</span>
+							<span class="message">I'm good, thanks! How about you?</span>
+						</div>
 					</div>
-					<div class="chat-message bot">
-						<span class="name">Genie:</span>
-						<span class="message">I'm good, thanks! How about you?</span>
+					<div class="chat-req-resp">
+						<div class="chat-message self">
+							<span class="name">You:</span>
+							<span class="message">Hello, how are you?</span>
+						</div>
+						<div class="chat-message bot">
+							<span class="name">Genie:</span>
+							<span class="message">I'm good, thanks! How about you?</span>
+						</div>
 					</div>
-					<div class="chat-message self">
-						<span class="name">You:</span>
-						<span class="message">Hello, how are you?</span>
-					</div>
-					<div class="chat-message bot">
-						<span class="name">Genie:</span>
-						<span class="message">I'm good, thanks! How about you?</span>
-					</div>
-					<div class="chat-message self">
-						<span class="name">You:</span>
-						<span class="message">Hello, how are you?</span>
-					</div>
-					<div class="chat-message bot">
-						<span class="name">Genie:</span>
-						<span class="message">I'm good, thanks! How about you?</span>
-					</div>
-					<div class="chat-message self">
-						<span class="name">You:</span>
-						<span class="message">Hello, how are you?</span>
-					</div>
-					<div class="chat-message bot">
-						<span class="name">Genie:</span>
-						<span class="message">I'm good, thanks! How about you?</span>
-					</div>
-					<div class="chat-message self">
-						<span class="name">You:</span>
-						<span class="message">Hello, how are you?</span>
-					</div>
-					<div class="chat-message bot">
-						<span class="name">Genie:</span>
-						<span class="message">I'm good, thanks! How about you?</span>
-					</div>
-					<div class="chat-message self">
-						<span class="name">You:</span>
-						<span class="message">Hello, how are you?</span>
-					</div>
-					<div class="chat-message bot">
-						<span class="name">Genie:</span>
-						<span class="message">I'm good, thanks! How about you?</span>
-					</div>
-					<div class="chat-message self">
-						<span class="name">You:</span>
-						<span class="message">Hello, how are you?</span>
-					</div>
-					<div class="chat-message bot">
-						<span class="name">Genie:</span>
-						<span class="message">I'm good, thanks! How about you?</span>
-					</div>
-					<div class="chat-message self">
-						<span class="name">You:</span>
-						<span class="message">Hello, how are you?</span>
-					</div>
-					<div class="chat-message bot">
-						<span class="name">Genie:</span>
-						<span class="message">I'm good, thanks! How about you?</span>
+					<div class="chat-req-resp">
+						<div class="chat-message self">
+							<span class="name">You:</span>
+							<span class="message">Hello, how are you?</span>
+						</div>
+						<div class="chat-message bot">
+							<span class="name">Genie:</span>
+							<span class="message">I'm good, thanks! How about you?</span>
+						</div>
 					</div>
 				</div>
 				<div class="input">
@@ -202,10 +122,11 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 
 	const provider = new GenieProvider(context.extensionUri);
-	disposable = vscode.window.registerWebviewViewProvider('code-genie.sidebar', provider, );
+	console.log(`Context URI = ${context.extensionUri}`);
+	disposable = vscode.window.registerWebviewViewProvider('code-genie.sidebar', provider,);
 	context.subscriptions.push(disposable);
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
 
